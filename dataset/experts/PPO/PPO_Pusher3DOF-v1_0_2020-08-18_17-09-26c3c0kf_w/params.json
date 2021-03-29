@@ -1,0 +1,5 @@
+{
+  "env": "Pusher3DOF-v1",
+  "monitor": true,
+  "num_workers": 4
+}
