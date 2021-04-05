@@ -7,6 +7,7 @@ Training expert using PPO and acquire expert demonstration data.
 - MuJoCo 1.50
 - mujoco-py 1.50
 - RAY rllib
+- OpenAI Baselines tf2 branch
 
 ## Usage
 - dataset.py

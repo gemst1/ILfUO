@@ -1,0 +1,19 @@
+Logging to ./baselines_results/20210405_09-45-53
+Stepping environment...
+Saving video to  /Users/wonseok/Desktop/PyCharm/research/ILfUO/IfO/pusher/IfO_rl_train/baselines_results/20210405_09-45-53/videos/vecenv.video.81066.video000000.mp4
+------------------------------------------
+| eplenmean               | 50           |
+| eprewmean               | -1.11e+05    |
+| fps                     | 106          |
+| loss/approxkl           | 0.001181902  |
+| loss/clipfrac           | 0.0004249998 |
+| loss/policy_entropy     | 4.258837     |
+| loss/policy_loss        | -0.0033559   |
+| loss/value_loss         | 2.1477177    |
+| misc/explained_variance | -0.14        |
+| misc/nupdates           | 1            |
+| misc/serial_timesteps   | 4000         |
+| misc/time_elapsed       | 37.6         |
+| misc/total_timesteps    | 4000         |
+------------------------------------------
+Stepping environment...

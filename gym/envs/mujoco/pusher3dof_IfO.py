@@ -1,12 +1,28 @@
 import gym
+from gym import spaces
 import numpy as np
 from gym import utils
 from gym.envs.mujoco.mujoco_env import MujocoEnv
+import tensorflow as tf
 
-class PusherEnv3DOF(MujocoEnv, utils.EzPickle):
+DICT_SPACE = spaces.Dict({"internal_state": spaces.Box(low=-10, high=10, shape=(8,)),
+                          "img": spaces.Box(low=-1, high=1, shape=(48, 48, 3))})
+
+TUPLE_SPACE = spaces.Tuple([
+    spaces.Box(low=-10, high=10, shape=(8, )),
+    spaces.Box(low=-1, high=1, shape=(48, 48, 3))
+])
+
+class PusherEnv3DOF_IfO(MujocoEnv, utils.EzPickle):
     def __init__(self, **kwargs):
         utils.EzPickle.__init__(self)
         self._kwargs = kwargs
+        # self.observation_space = spaces.Box(low=-10, high=10, shape=(1024,))
+        if 'enc_path' in self._kwargs:
+            self.ifo_model = tf.keras.models.load_model(self._kwargs['enc_path'])
+            self.enc = self.ifo_model.encoder_1
+
+
         MujocoEnv.__init__(self, '3link_gripper_push_2d.xml', 5)
         self.itr=0
 
@@ -26,15 +42,35 @@ class PusherEnv3DOF(MujocoEnv, utils.EzPickle):
         reward_true = 0
         if self.itr == 0:
             self.reward_orig = -reward_dist
-        # if self.itr == 49:
-        reward_true = reward_dist/self.reward_orig
+        if self.itr == 49:
+            reward_true = reward_dist/self.reward_orig
 
+        if 'demon_latent' in self._kwargs:
+            if self.itr % 2 == 0:
+                reward_latent = -np.sum((self._kwargs['demon_latent'][int(self.itr/2)]-ob[-1024:])**2)
+            else:
+                if self.itr == 49:
+                    self.itr = 47
+                reward_latent = -np.sum((self._kwargs['demon_latent'][int((self.itr+1)/2)] - ob[-1024:]) ** 2)
+
+            if self.itr % 2 == 0:
+                reward_image = -np.sum((self._kwargs['demon_image'][int(self.itr/2),:] - self.img_obs)**2)
+            else:
+                if self.itr == 49:
+                    self.itr = 47
+                reward_image = -np.sum((self._kwargs['demon_image'][int((self.itr+1)/2),:] - self.img_obs) ** 2)
+
+            reward_ifo = (reward_latent + self._kwargs['lambda_img']*reward_image)
+
+        else:
+            reward_ifo = reward_true
         self.itr += 1
-        return ob, reward_true, done, {}
+        return ob, reward_ifo, done, {}
 
     def reset_model(self):
         self.itr = 0
         qpos = self.np_random.uniform(low=-0.1, high=0.1, size=self.model.nq) + self.init_qpos
+        # qpos = self.init_qpos
         while True:
             object_ = [np.random.uniform(low=-1.0, high=-0.4),
                        np.random.uniform(low=0.3, high=1.2)]
@@ -64,14 +100,19 @@ class PusherEnv3DOF(MujocoEnv, utils.EzPickle):
                 geompostemp[body, 0] = pos_x
                 geompostemp[body, 1] = pos_y
 
-        if hasattr(self, "_kwargs") and 'geoms' in self._kwargs:
-            geoms = self._kwargs['geoms']
+        if hasattr(self, "_kwargs") and 'geomspos' in self._kwargs:
+            geomspos = self._kwargs['geomspos']
             for body in range(5):
                 body = body + 1
                 if 'object' in str(self.model.geom_names[body - 1]):
-                    rgbatmp[body, :] = geoms[body][0]
-                    geompostemp[body, 0] = geoms[body][1]
-                    geompostemp[body, 1] = geoms[body][2]
+                    geompostemp[body, 0] = geomspos[body][0]
+                    geompostemp[body, 1] = geomspos[body][1]
+        if hasattr(self, "_kwargs") and 'geomsrgba' in self._kwargs:
+            geomsrgba = self._kwargs['geomsrgba']
+            for body in range(5):
+                body = body + 1
+                if 'object' in str(self.model.geom_names[body - 1]):
+                    rgbatmp[body, :] = geomsrgba[body]
 
         self.model.geom_rgba[:] = rgbatmp
         self.model.geom_pos[:] = geompostemp
@@ -93,13 +134,19 @@ class PusherEnv3DOF(MujocoEnv, utils.EzPickle):
             self.seed()
         if not hasattr(self, 'object'):
             self.reset()
-        return np.concatenate([
-            self.sim.data.qpos.flat[7:-4],
-            self.sim.data.qvel.flat[7:-4],
-            self.get_body_com("distal_4"),
-            self.get_body_com("object"),
-            self.get_body_com("goal"),
-        ])
+        if 'enc_path' in self._kwargs:
+            self.img_obs = self.render('rgb_array', width=48, height=48)/127.5 - 1
+            z, _ = self.enc(np.reshape(self.img_obs, (-1, 48, 48, 3)))
+            obs = np.concatenate([
+                self.sim.data.qpos.flat[7:-4],
+                self.sim.data.qvel.flat[6:-4],
+                np.reshape(z, (-1)),])
+        else:
+            obs = np.concatenate([
+                self.sim.data.qpos.flat[7:-4],
+                self.sim.data.qvel.flat[6:-4],])
+
+        return obs
 
     def viewer_setup(self):
         self.itr = 0
