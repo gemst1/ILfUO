@@ -19,4 +19,7 @@ Imitation from observation TensorFlow 2.0 implementation
 
 ## Results
 ### Translator results
-<img src="./pusher/IfO_rl_train/baselines_results/20210405_09-45-53/trans_results/0_src.gif" width="100px" height="100px">
+|Source|Translated|
+|:------:|:------:|
+|<img src="./pusher/IfO_rl_train/baselines_results/20210405_09-45-53/trans_results/0_src.gif" width="150px" height="150px">||<img src="./pusher/IfO_rl_train/baselines_results/20210405_09-45-53/trans_results/0_trans.gif" width="150px" height="150px">|
+|<img src="./pusher/IfO_rl_train/baselines_results/20210405_09-45-53/trans_results/1_trans.gif" width="150px" height="150px">||<img src="./pusher/IfO_rl_train/baselines_results/20210405_09-45-53/trans_results/1_trans.gif" width="150px" height="150px">|
