@@ -26,8 +26,8 @@ class PusherEnv3DOF(MujocoEnv, utils.EzPickle):
         reward_true = 0
         if self.itr == 0:
             self.reward_orig = -reward_dist
-        # if self.itr == 49:
-        reward_true = reward_dist/self.reward_orig
+        if self.itr == 49:
+            reward_true = reward_dist/self.reward_orig
 
         self.itr += 1
         return ob, reward_true, done, {}
