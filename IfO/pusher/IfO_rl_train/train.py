@@ -12,7 +12,7 @@ except ImportError:
 
 # Parameters
 demon_path = '../../../dataset/singleview_push_sim_5000.npy'
-ifo_model_path = '../translator/results/models/model_80000_bgfix'
+ifo_model_path = '../translator/results/models/model_80000'
 ifo_model = tf.keras.models.load_model(ifo_model_path)
 enc_1 = ifo_model.encoder_1
 enc_2 = ifo_model.encoder_2

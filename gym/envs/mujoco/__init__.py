@@ -16,3 +16,4 @@ from gym.envs.mujoco.thrower import ThrowerEnv
 from gym.envs.mujoco.striker import StrikerEnv
 from gym.envs.mujoco.pusher3dof import PusherEnv3DOF
 from gym.envs.mujoco.pusher3dof_IfO import PusherEnv3DOF_IfO
+from gym.envs.mujoco.pusher3dof_ILfUO import PusherEnv3DOF_ILfUO

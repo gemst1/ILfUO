@@ -12,10 +12,10 @@ Imitation from observation TensorFlow 2.0 implementation
 ## Usage
 1. Train expert and collect demonstration data using ["dataset"](../dataset/README.md)
 2. Train the translator.
-- For example, execute ["IfO_pusher_sim.py"](./pusher/translator/IfO_pusher_sim.py)
+    - For example, execute ["IfO_pusher_sim.py"](./pusher/translator/IfO_pusher_sim.py)
     - To do this, you need to edit your gym environment. Please refer my ["gym"](../gym).
 3. Train IfO agent using trained translator and RL algorithm (ex. PPO)
-- For example, execute ["train.py"](./pusher/IfO_rl_train/train.py)
+    - For example, execute ["train.py"](./pusher/IfO_rl_train/train.py)
     - To do this, you need OpenAI Baslines tf2 branch and ["custom_run.py", "custom_cmd_util.py"](https://github.com/gemst1/baselines/tree/tf2).
 
 ## Results

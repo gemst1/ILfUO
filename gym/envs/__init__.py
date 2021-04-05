@@ -219,6 +219,13 @@ register(
 )
 
 register(
+    id='Pusher3DOF_ILfUO-v1',
+    entry_point='gym.envs.mujoco:PusherEnv3DOF_ILfUO',
+    kwargs={},
+    max_episode_steps=50,
+)
+
+register(
     id='Reacher-v2',
     entry_point='gym.envs.mujoco:ReacherEnv',
     max_episode_steps=50,

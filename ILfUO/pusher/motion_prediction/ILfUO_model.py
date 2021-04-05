@@ -140,7 +140,7 @@ class dist_decoder(tf.keras.layers.Layer):
             self.bn2 = tf.keras.layers.BatchNormalization()
             self.bn3 = tf.keras.layers.BatchNormalization()
 
-    def __call__(self, inputs, training=True):
+    def call(self, inputs, training=True):
         z, f0, f1, f2, f3 = inputs
         vid_len = z.shape[1]
 

@@ -259,6 +259,7 @@ class ILfUO_pusher_sim():
                         plt.imshow((origin_vid[i, 0] + 1) / 2.)
                         plt.axis('off')
                         plt.savefig(self.results_gif_path + '/%d_src_%d' % (epoch + 1, i))
+                        plt.close()
 
 
 if __name__ == "__main__":
