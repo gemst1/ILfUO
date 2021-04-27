@@ -8,7 +8,7 @@ from datetime import datetime
 
 import sys
 sys.path.append("../../model")
-from ILfUO_model import VideoGenerator
+from ILfUO_model_random import VideoGenerator
 
 class ILfUO_pusher_sim():
     def __init__(self,
@@ -20,7 +20,7 @@ class ILfUO_pusher_sim():
                  dm = 10,
                  de = 20,
                  log_freq=100,
-                 results_path='./results'):
+                 results_path='./results_random'):
 
         self.batch_size = batch_size
         self.epochs = epochs
@@ -95,37 +95,20 @@ class ILfUO_pusher_sim():
         self.data = np.load("../../../dataset/singleview_push_sim_5000.npy")
         self.n_train = 4000
         self.n_valid = 1000
-        self.n_train_sub = int(self.n_train / 4)
-        self.n_valid_sub = int(self.n_valid / 4)
+        lens = np.ones((11,25), 'int')*24
+        for i in range(np.shape(lens)[0]):
+            lens[i,:i+15] = np.round(np.arange(1,i+16)*25/(i+15)).astype(int)-1
+        self.vl_train = np.clip(np.round(np.random.normal(20, 2, self.n_train)), 15, 25).astype(int)
+        self.vl_valid = np.clip(np.round(np.random.normal(20, 2, self.n_valid)), 15, 25).astype(int)
+        vfs_train = lens[self.vl_train-15]
+        vfs_valid = lens[self.vl_valid-15]
         self.traindata = np.swapaxes(self.data[:, :self.n_train], 0, 1)
         self.validdata = np.swapaxes(self.data[:, -self.n_valid:], 0, 1)
-        vf_10 = np.ones(25, 'int') * 24
-        vf_15 = np.ones(25, 'int') * 24
-        vf_20 = np.ones(25, 'int') * 24
-        vf_25 = np.ones(25, 'int') * 24
-        vf_10[:10] = np.round(np.arange(1, 11) * 25 / 10).astype(int) - 1
-        vf_15[:15] = np.round(np.arange(1, 16) * 25 / 15).astype(int) - 1
-        vf_20[:20] = np.round(np.arange(1, 21) * 25 / 20).astype(int) - 1
-        vf_25[:25] = np.round(np.arange(1, 26) * 25 / 25).astype(int) - 1
-        self.traindata[:self.n_train_sub] = self.traindata[:self.n_train_sub, vf_10]
-        self.traindata[self.n_train_sub:self.n_train_sub * 2] = self.traindata[self.n_train_sub:self.n_train_sub * 2, vf_15]
-        self.traindata[self.n_train_sub * 2:self.n_train_sub * 3] = self.traindata[self.n_train_sub * 2:self.n_train_sub * 3, vf_20]
-        self.traindata[self.n_train_sub * 3:self.n_train_sub * 4] = self.traindata[self.n_train_sub * 3:self.n_train_sub * 4, vf_25]
-        self.validdata[:self.n_valid_sub] = self.validdata[:self.n_valid_sub, vf_10]
-        self.validdata[self.n_valid_sub:self.n_valid_sub * 2] = self.validdata[self.n_valid_sub:self.n_valid_sub * 2,vf_15]
-        self.validdata[self.n_valid_sub * 2:self.n_valid_sub * 3] = self.validdata[self.n_valid_sub * 2:self.n_valid_sub * 3, vf_20]
-        self.validdata[self.n_valid_sub * 3:self.n_valid_sub * 4] = self.validdata[self.n_valid_sub * 3:self.n_valid_sub * 4, vf_25]
-        # video length label
-        self.trainvl = np.zeros([self.n_train, 24, 4], dtype='float32')
-        self.trainvl[:self.n_train_sub, :, 0] = 1
-        self.trainvl[self.n_train_sub:self.n_train_sub * 2, :, 1] = 1
-        self.trainvl[self.n_train_sub * 2:self.n_train_sub * 3, :, 2] = 1
-        self.trainvl[self.n_train_sub * 3:self.n_train_sub * 4, :, 3] = 1
-        self.validvl = np.zeros([self.n_train, 24, 4], dtype='float32')
-        self.validvl[:self.n_valid_sub, :, 0] = 1
-        self.validvl[self.n_valid_sub:self.n_valid_sub * 2, :, 1] = 1
-        self.validvl[self.n_valid_sub * 2:self.n_valid_sub * 3, :, 2] = 1
-        self.validvl[self.n_valid_sub * 3:self.n_valid_sub * 4, :, 3] = 1
+        for i in range(self.n_train):
+            self.traindata[i] = self.traindata[i, vfs_train[i]]
+        for i in range(self.n_valid):
+            self.validdata[i] = self.validdata[i, vfs_valid[i]]
+
 
     def train(self):
         tuples_id = np.arange(self.n_train)
@@ -145,14 +128,13 @@ class ILfUO_pusher_sim():
                 for step in range(bat_per_epo):
                     tupids = tuples_id[step*self.batch_size:(step+1)*self.batch_size]
                     vid_batch = self.traindata[tupids]
-                    vl_batch = self.trainvl[tupids]
+                    vl_batch = self.vl_train[tupids]
                     eps = tf.random.truncated_normal([self.batch_size, 24, self.de])
                     frames = np.swapaxes(np.array([np.arange(self.batch_size),
                                                    np.round(np.random.choice(25, self.batch_size, replace=True) / 25
-                                                            * np.max(vl_batch[:, 0] * np.array([10, 15, 20, 25]),
-                                                                     axis=1)).astype(int)]), 0, 1)
+                                                            * vl_batch).astype(int)]), 0, 1)
 
-                    inputs = [vid_batch, vl_batch, eps, frames]
+                    inputs = [vid_batch, eps, frames]
 
                     # Autoencoder update
                     with tf.GradientTape(persistent=True) as tape:
@@ -203,14 +185,13 @@ class ILfUO_pusher_sim():
                 for step in range(val_per_epo):
                     tupids = valid_id[step * self.batch_size:(step + 1) * self.batch_size]
                     vid_batch = self.validdata[tupids]
-                    vl_batch = self.validvl[tupids]
+                    vl_batch = self.vl_valid[tupids]
                     eps = tf.random.truncated_normal([self.batch_size, 24, self.de])
                     frames = np.swapaxes(np.array([np.arange(self.batch_size),
                                                    np.round(np.random.choice(25, self.batch_size, replace=True) / 25
-                                                            * np.max(vl_batch[:, 0] * np.array([10, 15, 20, 25]),
-                                                                     axis=1)).astype(int)]), 0, 1)
+                                                            * vl_batch).astype(int)]), 0, 1)
 
-                    inputs = [vid_batch, vl_batch, eps, frames]
+                    inputs = [vid_batch, eps, frames]
 
                     recon_vid, origin_vid, z_c, z_c_origin, z_m, z_m_origin, origin_frame, recon_frame = self.vid_gen(inputs, training=False)
 
@@ -283,5 +264,5 @@ if __name__ == "__main__":
                              dm=40,
                              batch_size=40,
                              log_freq=50,
-                             results_path='./results')
+                             results_path='./results_random')
     ILfUO.train()
