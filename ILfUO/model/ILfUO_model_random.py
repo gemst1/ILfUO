@@ -191,14 +191,12 @@ class VideoGenerator(tf.keras.Model):
         self.w16 = int(self.w / 16)
 
     def call(self, inputs, training=True):
-        vid_batch, vl_batch, eps, frames = inputs
+        vid_batch, eps, frames = inputs
         batch_size = vid_batch.shape[0]
 
         z_c, features = self.encoder_content(vid_batch[:, 0], training)
         z_m, _ = self.encoder_motion(vid_batch[:, 0], training)
         # # sample noise
-        # # eps = tf.random.truncated_normal([batch_size, 24, self.de])
-        eps = tf.concat([eps, vl_batch], axis=-1)
         # # generate state sequence
         f0 = tf.tile(tf.reshape(features[0], [-1, 1, 24, 24, self.en_dim]), [1, 25, 1, 1, 1])
         f1 = tf.tile(tf.reshape(features[1], [-1, 1, 12, 12, self.en_dim*2]), [1, 25, 1, 1, 1])
@@ -216,8 +214,8 @@ class VideoGenerator(tf.keras.Model):
         origin_vid = vid_batch
 
         origin_frame = tf.gather_nd(origin_vid, frames)
-        z_c_origin, _ = self.encoder_content(origin_frame)
-        z_m_origin, _ = self.encoder_motion(origin_frame)
+        z_c_origin, _ = self.encoder_content(origin_frame, training)
+        z_m_origin, _ = self.encoder_motion(origin_frame, training)
         z_m = tf.gather_nd(z_ms, frames)
         # reconstruction selected original video frames
         f0 = tf.reshape(features[0], [-1, 1, 24, 24, self.en_dim])
