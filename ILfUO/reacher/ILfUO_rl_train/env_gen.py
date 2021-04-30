@@ -4,7 +4,7 @@ import imageio
 
 # Imitation learning environment setup
 env_nums = 10
-env_name = "Pusher3DOF_ILfUO-v1"
+env_name = "Reacher3DOF_ILfUO-v1"
 result_file = "random_envs_cond"
 
 envs_cond = []
