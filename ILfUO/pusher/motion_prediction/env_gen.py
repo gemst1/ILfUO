@@ -5,6 +5,7 @@ import ray
 from ray.rllib.agents import ppo
 import imageio
 import os
+import copy
 
 results_path = './evaluation_results'
 if not os.path.exists(results_path):
@@ -38,6 +39,10 @@ while i < env_nums:
     env = gym.make(env_name, vp=vp)
     obs = env.reset()
     ctx_img = env.render(mode='rgb_array', width=48, height=48)/127.5-1
+    object = env.env.object
+    goal = env.env.goal
+    rgbatmp = env.env.model.geom_rgba
+    geompostemp = env.env.model.geom_pos
     for j in range(50):
         action = agent.compute_action(obs)
         obs, reward, _, _ = env.step(action) # take a random action
@@ -51,17 +56,13 @@ while i < env_nums:
         plt.imshow((ctx_img+1)/2.)
         plt.show()
 
-        object = env.env.object
-        goal = env.env.goal
-        rgbatmp = env.env.model.geom_rgba
-        geompostemp = env.env.model.geom_pos
         cond = {'vp': vp,
                 'object': object,
                 'goal': goal,
                 'geomsrgba': rgbatmp,
                 'geomspos': geompostemp,
                 'ctx_img': ctx_img}
-        envs_cond.append(cond)
+        envs_cond.append(copy.deepcopy(cond))
         for k in range(4):
             imageio.mimsave(results_path + '/env_%d_vl_%d_gt.gif' % (i, k), np.asarray(imgs)[vf[:, k]], duration=0.1)
         i += 1
