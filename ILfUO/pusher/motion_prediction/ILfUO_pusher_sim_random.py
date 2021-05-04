@@ -250,10 +250,7 @@ class ILfUO_pusher_sim():
                     for i in range(10):
                         imageio.mimsave(self.results_gif_path + "/%d_recon_%d.gif" % (epoch + 1, i), recon_vid[i], duration=0.1)
                         imageio.mimsave(self.results_gif_path + "/%d_src_%d.gif" % (epoch + 1, i), origin_vid[i], duration=0.1)
-                        plt.imshow((origin_vid[i, 0] + 1) / 2.)
-                        plt.axis('off')
-                        plt.savefig(self.results_gif_path + '/%d_src_%d' % (epoch + 1, i))
-                        plt.close()
+                        imageio.imwrite(self.results_gif_path + '/%d_src_%d.png' % (epoch + 1, i), origin_vid[i, 0])
 
 
 if __name__ == "__main__":
