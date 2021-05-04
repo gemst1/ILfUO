@@ -47,7 +47,7 @@ while i < env_nums:
         action = agent.compute_action(obs)
         obs, reward, _, _ = env.step(action) # take a random action
         if j%2==1:
-            img = env.render(mode='rgb_array')
+            img = env.render(mode='rgb_array', width=48, height=48)
             imgs.append(img)
     print("Episode: ", i, ", reward: ", reward)
     env.close()
